@@ -15,38 +15,49 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { useSetRecoilState } from "recoil";
+import authScreenAtom from "../../atoms/authAtom";
+import { useShowToast } from "../../hooks/useShowToast";
+import { userAtom } from "../../atoms/userAtom";
 
 export default function LoginCard() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const showToast = useShowToast();
+  const setUser = useSetRecoilState(userAtom);
 
   const [inputs, setInputs] = useState({
     username: "",
     password: "",
   });
 
-  //   const handleLogin = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch("/api/users/login", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(inputs),
-  //       });
-  //       const data = await res.json();
-  //       if (data.error) {
-  //         showToast("Error", data.error, "error");
-  //         return;
-  //       }
-  //       localStorage.setItem("user-threads", JSON.stringify(data));
-  //       setUser(data);
-  //     } catch (error) {
-  //       showToast("Error", error, "error");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  const setAuthScreen = useSetRecoilState(authScreenAtom);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inputs),
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
+      }
+      localStorage.setItem("user-threads", JSON.stringify(data));
+      setUser(data);
+    } catch (error) {
+      showToast("Error", error, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Flex align={"center"} justify={"center"}>
@@ -114,8 +125,8 @@ export default function LoginCard() {
                 _hover={{
                   bg: useColorModeValue("gray.300", "gray.900"),
                 }}
-                // onClick={handleLogin}
-                // isLoading={loading}
+                onClick={handleLogin}
+                isLoading={loading}
               >
                 Login
               </Button>
@@ -123,7 +134,12 @@ export default function LoginCard() {
             <Stack pt={6}>
               <Text align={"center"}>
                 Don&apos;t have an account?{" "}
-                <Link color={"blue.400"}>Sign up</Link>
+                <Link
+                  color={"blue.400"}
+                  onClick={() => setAuthScreen("signup")}
+                >
+                  Sign up
+                </Link>
               </Text>
             </Stack>
           </Stack>

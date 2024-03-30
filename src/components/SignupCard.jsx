@@ -16,15 +16,47 @@ import {
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { useSetRecoilState } from "recoil";
+import authScreenAtom from "../../atoms/authAtom";
+import { useShowToast } from "../../hooks/useShowToast";
+import { userAtom } from "../../atoms/userAtom";
 
 export default function SignupCard() {
   const [showPassword, setShowPassword] = useState(false);
+  const setAuthScreen = useSetRecoilState(authScreenAtom);
+  const showToast = useShowToast();
+  const setUser = useSetRecoilState(userAtom);
+
   const [inputs, setInputs] = useState({
     name: "",
     username: "",
     email: "",
     password: "",
   });
+
+  const handleSignup = async () => {
+    try {
+      const res = await fetch("/api/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inputs),
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
+      }
+
+      localStorage.setItem("user-threads", JSON.stringify(data));
+      setUser(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <Flex align={"center"} justify={"center"}>
@@ -90,7 +122,10 @@ export default function SignupCard() {
                   value={inputs.password}
                 />
                 <InputRightElement h={"full"}>
-                  <Button variant={"ghost"}>
+                  <Button
+                    variant={"ghost"}
+                    onClick={() => setShowPassword((prevState) => !prevState)}
+                  >
                     {showPassword ? <ViewIcon /> : <ViewOffIcon />}
                   </Button>
                 </InputRightElement>
@@ -105,13 +140,17 @@ export default function SignupCard() {
                 _hover={{
                   bg: useColorModeValue("gray.300", "gray.900"),
                 }}
+                onClick={handleSignup}
               >
                 Sign up
               </Button>
             </Stack>
             <Stack pt={6}>
               <Text align={"center"}>
-                Already a user? <Link color={"blue.400"}>Login</Link>
+                Already a user?{" "}
+                <Link onClick={() => setAuthScreen("login")} color={"blue.400"}>
+                  Login
+                </Link>
               </Text>
             </Stack>
           </Stack>

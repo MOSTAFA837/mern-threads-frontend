@@ -9,5 +9,13 @@ export default defineConfig({
       usePolling: true,
     },
     port: 3000,
+    // get rid of CORS errors
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });
