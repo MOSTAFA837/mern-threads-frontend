@@ -17,9 +17,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useSetRecoilState } from "recoil";
-import authScreenAtom from "../../atoms/authAtom";
-import { useShowToast } from "../../hooks/useShowToast";
-import { userAtom } from "../../atoms/userAtom";
+import { useShowToast } from "../hooks/useShowToast";
+import { userAtom } from "../atoms/userAtom";
+import authScreenAtom from "../atoms/authAtom";
 
 export default function SignupCard() {
   const [showPassword, setShowPassword] = useState(false);
