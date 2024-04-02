@@ -1,5 +1,4 @@
 import { Container } from "@chakra-ui/react";
-import "./App.css";
 import { Navigate, Route, Routes } from "react-router-dom";
 import UserPage from "./pages/UserPage";
 import PostPage from "./pages/PostPage";
@@ -33,7 +32,19 @@ function App() {
           element={!user ? <AuthPage /> : <Navigate to="/" />}
         />
 
-        <Route path="/:username" element={<UserPage />} />
+        <Route
+          path="/:username"
+          element={
+            user ? (
+              <>
+                <UserPage />
+                <CreatePost />
+              </>
+            ) : (
+              <UserPage />
+            )
+          }
+        />
         <Route path="/:username/post/:pid" element={<PostPage />} />
         <Route
           path="/settings"
@@ -41,7 +52,7 @@ function App() {
         />
       </Routes>
 
-      {user && <CreatePost />}
+      {/* {user && <CreatePost />} */}
     </Container>
   );
 }
