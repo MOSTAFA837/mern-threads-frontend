@@ -20,6 +20,7 @@ import {
   selectedConversationsAtom,
 } from "../atoms/messageAtom";
 import { userAtom } from "../atoms/userAtom";
+import { useSocket } from "../context/SocketContext";
 
 export default function ChatPage() {
   const showToast = useShowToast();
@@ -31,6 +32,7 @@ export default function ChatPage() {
     selectedConversationsAtom
   );
   const currentUser = useRecoilValue(userAtom);
+  const { onlineUsers } = useSocket();
 
   useEffect(() => {
     const getConversations = async () => {
@@ -180,6 +182,9 @@ export default function ChatPage() {
               <Conversation
                 key={conversation._id}
                 conversation={conversation}
+                isOnline={onlineUsers.includes(
+                  conversation.participants[0]._id
+                )}
               />
             ))}
         </Flex>

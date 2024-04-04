@@ -15,7 +15,7 @@ import { userAtom } from "../atoms/userAtom";
 import { BsCheck2All, BsFillImageFill } from "react-icons/bs";
 import { selectedConversationsAtom } from "../atoms/messageAtom";
 
-export default function Conversation({ conversation }) {
+export default function Conversation({ conversation, isOnline }) {
   const user = conversation.participants[0];
   const lastMessage = conversation.lastMessage;
   const colorMode = useColorMode();
@@ -62,7 +62,7 @@ export default function Conversation({ conversation }) {
           }}
           src={"https://bit.ly/broken-link"}
         >
-          <AvatarBadge boxSize="1em" bg="green.500" />
+          {isOnline && <AvatarBadge boxSize="1em" bg="green.500" />}
         </Avatar>
       </WrapItem>
 
