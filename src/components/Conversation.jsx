@@ -1,15 +1,30 @@
 import {
   Avatar,
   AvatarBadge,
+  Box,
   Flex,
   Image,
   Stack,
   Text,
   WrapItem,
+  useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { userAtom } from "../atoms/userAtom";
+import { BsCheck2All, BsFillImageFill } from "react-icons/bs";
+import { selectedConversationsAtom } from "../atoms/messageAtom";
 
-export default function Conversation() {
+export default function Conversation({ conversation }) {
+  const user = conversation.participants[0];
+  const lastMessage = conversation.lastMessage;
+  const colorMode = useColorMode();
+
+  const currentUser = useRecoilValue(userAtom);
+  const [selectedConversation, setSelectedConversation] = useRecoilState(
+    selectedConversationsAtom
+  );
+
   return (
     <Flex
       gap={4}
@@ -21,6 +36,22 @@ export default function Conversation() {
         color: "white",
       }}
       borderRadius={"md"}
+      bg={
+        selectedConversation?._id === conversation._id
+          ? colorMode === "light"
+            ? "gray.400"
+            : "gray.dark"
+          : ""
+      }
+      onClick={() =>
+        setSelectedConversation({
+          _id: conversation._id,
+          userId: user._id,
+          userProfilePic: user.profilePic,
+          username: user.username,
+          mock: conversation.mock,
+        })
+      }
     >
       <WrapItem>
         <Avatar
@@ -37,11 +68,11 @@ export default function Conversation() {
 
       <Stack direction={"column"} fontSize={"sm"}>
         <Text fontWeight="700" display={"flex"} alignItems={"center"}>
-          mohamed <Image src="/verified.png" w={4} h={4} ml={1} />
+          {user.username} <Image src="/verified.png" w={4} h={4} ml={1} />
         </Text>
 
         <Text fontSize={"xs"} display={"flex"} alignItems={"center"} gap={1}>
-          {/* {currentUser._id === lastMessage.sender ? (
+          {currentUser._id === lastMessage.sender ? (
             <Box color={lastMessage.seen ? "blue.400" : ""}>
               <BsCheck2All size={16} />
             </Box>
@@ -51,7 +82,7 @@ export default function Conversation() {
 
           {lastMessage.text.length > 18
             ? lastMessage.text.substring(0, 18) + "..."
-            : lastMessage.text || <BsFillImageFill size={16} />} */}
+            : lastMessage.text || <BsFillImageFill size={16} />}
         </Text>
       </Stack>
     </Flex>
