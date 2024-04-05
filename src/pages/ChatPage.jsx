@@ -32,7 +32,27 @@ export default function ChatPage() {
     selectedConversationsAtom
   );
   const currentUser = useRecoilValue(userAtom);
-  const { onlineUsers } = useSocket();
+  const { onlineUsers, socket } = useSocket();
+
+  useEffect(() => {
+    socket?.on("messagesSeen", ({ conversationId }) => {
+      setConversations((prev) => {
+        const updatedConversations = prev.map((conversation) => {
+          if (conversation._id === conversationId) {
+            return {
+              ...conversation,
+              lastMessage: {
+                ...conversation.lastMessage,
+                seen: true,
+              },
+            };
+          }
+          return conversation;
+        });
+        return updatedConversations;
+      });
+    });
+  }, [socket, setConversations]);
 
   useEffect(() => {
     const getConversations = async () => {

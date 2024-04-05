@@ -16,7 +16,7 @@ import {
   conversationsAtom,
   selectedConversationsAtom,
 } from "../atoms/messageAtom";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { userAtom } from "../atoms/userAtom";
 import { useSocket } from "../context/SocketContext";
 import messageSound from "../assets/sound/message.mp3";
@@ -28,7 +28,7 @@ export default function MessageContainer() {
   const [messages, setMessages] = useState([]);
   const setConversations = useSetRecoilState(conversationsAtom);
 
-  const [selectedConversation] = useRecoilState(selectedConversationsAtom);
+  const selectedConversation = useRecoilValue(selectedConversationsAtom);
   const { socket } = useSocket();
   const messageEndRef = useRef(null);
 
@@ -92,6 +92,36 @@ export default function MessageContainer() {
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const lastMessageIsFromOtherUser =
+      messages.length &&
+      messages[messages.length - 1].sender !== currentUser._id;
+
+    if (lastMessageIsFromOtherUser) {
+      socket.emit("markMessagesAsSeen", {
+        conversationId: selectedConversation._id,
+        userId: selectedConversation.userId,
+      });
+
+      socket.on("messagesSeen", ({ conversationId }) => {
+        if (selectedConversation._id === conversationId) {
+          setMessages((prev) => {
+            const updatedMessages = prev.map((message) => {
+              if (!message.seen) {
+                return {
+                  ...message,
+                  seen: true,
+                };
+              }
+              return message;
+            });
+            return updatedMessages;
+          });
+        }
+      });
+    }
+  }, [currentUser._id, messages, selectedConversation, socket]);
 
   return (
     <Flex
