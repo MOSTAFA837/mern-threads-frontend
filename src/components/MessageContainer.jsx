@@ -10,19 +10,59 @@ import {
 } from "@chakra-ui/react";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useShowToast } from "../hooks/useShowToast";
-import { selectedConversationsAtom } from "../atoms/messageAtom";
-import { useRecoilState, useRecoilValue } from "recoil";
+import {
+  conversationsAtom,
+  selectedConversationsAtom,
+} from "../atoms/messageAtom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { userAtom } from "../atoms/userAtom";
+import { useSocket } from "../context/SocketContext";
+import messageSound from "../assets/sound/message.mp3";
 
 export default function MessageContainer() {
   const showToast = useShowToast();
   const currentUser = useRecoilValue(userAtom);
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState([]);
+  const setConversations = useSetRecoilState(conversationsAtom);
 
   const [selectedConversation] = useRecoilState(selectedConversationsAtom);
+  const { socket } = useSocket();
+  const messageEndRef = useRef(null);
+
+  useEffect(() => {
+    socket.on("newMessage", (message) => {
+      if (selectedConversation._id === message.conversationId) {
+        setMessages((prev) => [...prev, message]);
+      }
+
+      // make a sound if the window is not focused
+      if (!document.hasFocus()) {
+        const sound = new Audio(messageSound);
+        sound.play();
+      }
+
+      setConversations((prev) => {
+        const updatedConversations = prev.map((conversation) => {
+          if (conversation._id === message.conversationId) {
+            return {
+              ...conversation,
+              lastMessage: {
+                text: message.text,
+                sender: message.sender,
+              },
+            };
+          }
+          return conversation;
+        });
+        return updatedConversations;
+      });
+    });
+
+    return () => socket.off("newMessage");
+  }, [selectedConversation._id, setConversations, socket]);
 
   useEffect(() => {
     const getMessages = async () => {
@@ -48,6 +88,10 @@ export default function MessageContainer() {
 
     getMessages();
   }, [showToast, selectedConversation.userId, selectedConversation.mock]);
+
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <Flex
@@ -98,11 +142,20 @@ export default function MessageContainer() {
 
         {!isLoading &&
           messages.map((message) => (
-            <Message
+            <Flex
               key={message._id}
-              message={message}
-              ownMessage={currentUser._id === message.sender}
-            />
+              direction="column"
+              ref={
+                messages.length - 1 === messages.indexOf(message)
+                  ? messageEndRef
+                  : null
+              }
+            >
+              <Message
+                message={message}
+                ownMessage={currentUser._id === message.sender}
+              />
+            </Flex>
           ))}
       </Flex>
 
